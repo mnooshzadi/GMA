@@ -42,7 +42,6 @@ def flow_write_flo(flow, filepath):
         image.astype(np.float32).tofile(f)
 
 
-
 def viz(img, flo, flow_dir, idx):
     img = img[0].permute(1, 2, 0).cpu().numpy()
     flo = flo[0].permute(1, 2, 0).cpu().numpy()
@@ -106,8 +105,9 @@ def demo(args):
                 padder = InputPadder(image1.shape)
                 image1, image2 = padder.pad(image1, image2)
 
-                flow_low, flow_up = model(image1, image2, iters=31, test_mode=True)
-                print(f"Estimating optical flow...")
+                flow_low, flow_up = model(image1, image2, iters=80, test_mode=True)
+                if idx % 20 == 0:
+                    print(f"Estimating optical flow...")
 
                 viz(image1, flow_up, flow_dir, idx)
                 
