@@ -56,7 +56,8 @@ def viz(img, flo, flow_dir, idx):
     filepath = os.path.join(flow_dir, filename)
     
     imageio.imwrite(filepath, flo)
-    print(f"Saving optical flow visualisation at {os.path.join(flow_dir, f'flo_{idx:04d}.png')}")
+    if idx % 20 == 0:
+        print(f"Saving optical flow visualisation at {os.path.join(flow_dir, f'flo_{idx:04d}.png')}")
 
 
 def normalize(x):
@@ -105,7 +106,7 @@ def demo(args):
                 padder = InputPadder(image1.shape)
                 image1, image2 = padder.pad(image1, image2)
 
-                flow_low, flow_up = model(image1, image2, iters=12, test_mode=True)
+                flow_low, flow_up = model(image1, image2, iters=31, test_mode=True)
                 print(f"Estimating optical flow...")
 
                 viz(image1, flow_up, flow_dir, idx)
