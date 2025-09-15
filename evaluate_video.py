@@ -56,43 +56,50 @@ def demo(args):
         os.makedirs(flow_dir)
 
     with torch.no_grad():
-        cap = cv2.VideoCapture(args.path)
+        
+        video_extensions = ('.avi', '.mp4')
+        video_files = [f for f in os.listdir(args.path) 
+                    if f.lower().endswith(video_extensions)]
+        video_files = [os.path.join(args.path, f) for f in video_files]
+        
+        for video_file in video_files:
+            cap = cv2.VideoCapture(video_file)
 
-        if not cap.isOpened():
-            raise IOError(f"Cannot open video: {args.path}")
+            if not cap.isOpened():
+                raise IOError(f"Cannot open video: {video_file}")
 
-        # Read the first frame
-        ret, prev_frame = cap.read()
+            # Read the first frame
+            ret, prev_frame = cap.read()
 
-        while True:
-            # Read the next frame
-            ret, next_frame = cap.read()
-            if not ret:
-                break
+            while True:
+                # Read the next frame
+                ret, next_frame = cap.read()
+                if not ret:
+                    break
 
-            
-            image1 = load_frame(prev_frame)
-            image2 = load_frame(next_frame)
+                
+                image1 = load_frame(prev_frame)
+                image2 = load_frame(next_frame)
 
-            padder = InputPadder(image1.shape)
-            image1, image2 = padder.pad(image1, image2)
+                padder = InputPadder(image1.shape)
+                image1, image2 = padder.pad(image1, image2)
 
-            flow_low, flow_up = model(image1, image2, iters=12, test_mode=True)
-            print(f"Estimating optical flow...")
+                flow_low, flow_up = model(image1, image2, iters=12, test_mode=True)
+                print(f"Estimating optical flow...")
 
-            viz(image1, flow_up, flow_dir)
-            
-            # Move to the next step: shift frames
-            prev_frame = next_frame
+                viz(image1, flow_up, flow_dir)
+                
+                # Move to the next step: shift frames
+                prev_frame = next_frame
 
-        cap.release()
+            cap.release()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', help="restore checkpoint")
     parser.add_argument('--model_name', help="define model name", default="GMA")
-    parser.add_argument('--path', help="path to video")
+    parser.add_argument('--path', help="dataset for evaluation")
     parser.add_argument('--num_heads', default=1, type=int,
                         help='number of heads in attention and aggregation')
     parser.add_argument('--position_only', default=False, action='store_true',
