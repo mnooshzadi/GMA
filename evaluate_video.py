@@ -27,14 +27,17 @@ def load_frame(frame):
     return img[None].to(DEVICE)
 
 
-def viz(img, flo, flow_dir):
+def viz(img, flo, flow_dir, idx):
     img = img[0].permute(1, 2, 0).cpu().numpy()
     flo = flo[0].permute(1, 2, 0).cpu().numpy()
 
     # map flow to rgb image
     flo = flow_viz.flow_to_image(flo)
 
-    imageio.imwrite(os.path.join(flow_dir, 'flo.png'), flo)
+    filename = f'flo_{idx:04d}.png'
+    filepath = os.path.join(flow_dir, filename)
+    
+    imageio.imwrite(filepath, flo)
     print(f"Saving optical flow visualisation at {os.path.join(flow_dir, 'flo.png')}")
 
 
@@ -71,13 +74,13 @@ def demo(args):
             # Read the first frame
             ret, prev_frame = cap.read()
 
+            idx = 0
             while True:
                 # Read the next frame
                 ret, next_frame = cap.read()
                 if not ret:
                     break
 
-                
                 image1 = load_frame(prev_frame)
                 image2 = load_frame(next_frame)
 
@@ -87,10 +90,11 @@ def demo(args):
                 flow_low, flow_up = model(image1, image2, iters=12, test_mode=True)
                 print(f"Estimating optical flow...")
 
-                viz(image1, flow_up, flow_dir)
+                viz(image1, flow_up, flow_dir, idx)
                 
                 # Move to the next step: shift frames
                 prev_frame = next_frame
+                idx += 1
 
             cap.release()
 
