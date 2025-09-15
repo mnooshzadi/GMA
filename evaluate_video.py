@@ -16,6 +16,7 @@ from network import RAFTGMA
 from utils import flow_viz
 from utils.utils import InputPadder
 import os
+import struct
 
 
 DEVICE = 'cuda'
@@ -26,10 +27,27 @@ def load_frame(frame):
     img = torch.from_numpy(frame_rgb).permute(2, 0, 1).float()
     return img[None].to(DEVICE)
 
+# Write .flo file
+# Code adapted from https://rb.gy/0pzbhb
+def flow_write_flo(flow, filepath):
+    with open(filepath, "wb") as f:
+        SENTINEL = 1666666800.0  # Only here to look like Middlebury original files
+        height, width, _ = flow.shape
+
+        image = flow.copy()
+        image[np.isnan(image)] = SENTINEL
+
+        f.write(b'PIEH')
+        f.write(struct.pack("II", width, height))
+        image.astype(np.float32).tofile(f)
+
+
 
 def viz(img, flo, flow_dir, idx):
     img = img[0].permute(1, 2, 0).cpu().numpy()
     flo = flo[0].permute(1, 2, 0).cpu().numpy()
+
+    flow_write_flo(flo, os.path.join(flow_dir, f'flo_{idx:04d}.flo'))
 
     # map flow to rgb image
     flo = flow_viz.flow_to_image(flo)
@@ -38,7 +56,7 @@ def viz(img, flo, flow_dir, idx):
     filepath = os.path.join(flow_dir, filename)
     
     imageio.imwrite(filepath, flo)
-    print(f"Saving optical flow visualisation at {os.path.join(flow_dir, 'flo.png')}")
+    print(f"Saving optical flow visualisation at {os.path.join(flow_dir, f'flo_{idx:04d}.png')}")
 
 
 def normalize(x):
