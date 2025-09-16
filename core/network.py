@@ -9,7 +9,7 @@ from utils.utils import bilinear_sampler, coords_grid, upflow8
 from gma import Attention, Aggregate
 
 try:
-    autocast = torch.cuda.amp.autocast
+    autocast = torch.amp.autocast
 except:
     # dummy autocast for PyTorch < 1.6
     class autocast:
